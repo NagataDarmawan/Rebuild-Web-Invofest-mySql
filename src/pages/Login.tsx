@@ -19,8 +19,8 @@ const schema = z.object({
 export default function Login() {
   const login = useAuthStore((state) => state.login);
   const navigate = useNavigate();
-  const [loading, setLoading] = useState<boolean>(false); // State untuk mengontrol tombol loading
-  const [showPassword, setShowPassword] = useState<boolean>(false); // 🌟 TAMBAHAN: State untuk show/hide password
+  const [loading, setLoading] = useState<boolean>(false); 
+  const [showPassword, setShowPassword] = useState<boolean>(false); 
 
   const {
     register,
@@ -38,8 +38,6 @@ export default function Login() {
         headers: {
           "Content-Type": "application/json",
         },
-        // 🌟 DI SINI PERUBAHANNYA:
-        // Mengirimkan nilai 'data.username' ke backend dengan nama properti 'email'
         body: JSON.stringify({
           email: data.username, 
           password: data.password
@@ -49,23 +47,30 @@ export default function Login() {
       const result = await response.json();
 
       if (!response.ok) {
-        // Menangkap pesan error spesifik yang dilempar oleh backend kamu
         throw new Error(result.message || "Username atau password salah.");
       }
 
       alert("Login berhasil!");
       
-      // Simpan JWT token ke localStorage jika dikembalikan oleh backend
+      // Simpan JWT token ke localStorage
       if (result.token) {
         localStorage.setItem("token", result.token);
       }
 
-      // 🌟 PERBAIKAN DI SINI: Ambil objek user dari db (termasuk foto profilnya)
+      // Ambil data user dari response backend
       const userFromDB = result.user || result.data || result;
-      login({
+      
+      // Membuat objek user yang bersih
+      const userData = {
         username: userFromDB.username || data.username,
-        foto: userFromDB.foto || "default.png" // default.png jika foto kosong di DB
-      });
+        foto: userFromDB.foto || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=100&q=80"
+      };
+
+      // 🌟 PERBAIKAN: Menyimpan data user ke localStorage dalam bentuk STRING agar tidak memicu error TS2345
+      localStorage.setItem("user", JSON.stringify(userData));
+
+      // Kirim data ke fungsi login milik global state AuthStore kamu
+      login(userData);
 
       navigate("/dashboard");
     } catch (err: unknown) {
@@ -111,12 +116,12 @@ export default function Login() {
               <Input
                 label="Password"
                 name="password"
-                type={showPassword ? "text" : "password"} // 🌟 TAMBAHAN: Tipe berubah dinamis tergantung state
+                type={showPassword ? "text" : "password"} 
                 register={register}
                 error={errors.password?.message}
               />
               
-              {/* 🌟 TAMBAHAN: Fitur Toggle Lihat Password & Lupa Password */}
+              {/* Fitur Toggle Lihat Password */}
               <div className="flex justify-between items-center px-1">
                 <label className="flex items-center gap-2 text-xs text-gray-500 font-medium cursor-pointer select-none">
                   <input 
