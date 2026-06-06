@@ -66,11 +66,12 @@ export default function Login() {
         foto: userFromDB.foto || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=100&q=80"
       };
 
-      // 🌟 PERBAIKAN: Menyimpan data user ke localStorage dalam bentuk STRING agar tidak memicu error TS2345
+      // Menyimpan data user ke localStorage dalam bentuk STRING
       localStorage.setItem("user", JSON.stringify(userData));
 
-      // Kirim data ke fungsi login milik global state AuthStore kamu
-      login(userData);
+      // 🌟 PERBAIKAN: Mengirim string token ke fungsi login sesuai kebutuhan parameter TypeScript
+      // Jika global store kamu membutuhkan username (bukan token), ganti menjadi: login(userData.username)
+      login(result.token || userData.username);
 
       navigate("/dashboard");
     } catch (err: unknown) {
