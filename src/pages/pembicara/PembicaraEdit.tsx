@@ -27,7 +27,7 @@ export default function PembicaraEdit() {
 
   // 1. Load data lama pembicara berdasarkan ID (MENGGUNAKAN URL BACKEND VERCEL)
   useEffect(() => {
-    fetch(`https://be-web2.vercel.app/pembicara/${id}`)
+    fetch(`http://localhost:3000/pembicara/${id}`)
       .then((res) => {
         if (!res.ok) throw new Error("Gagal mengambil data pembicara");
         return res.json();
@@ -49,7 +49,7 @@ export default function PembicaraEdit() {
     setIsLoading(true);
     setFeedback(null);
     try {
-      const response = await fetch(`https://be-web2.vercel.app/pembicara/${id}`, {
+      const response = await fetch(`http://localhost:3000/pembicara/${id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data), // Hanya mengirim nama dan topik yang diubah

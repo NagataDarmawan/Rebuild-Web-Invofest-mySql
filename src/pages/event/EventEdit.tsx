@@ -16,6 +16,7 @@ export default function EventEdit() {
   const { id } = useParams(); // Mengambil ID dari URL
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
+  const [isUpdating, setIsUpdating] = useState(false); // State loading untuk tombol submit
   
   // State untuk menyimpan daftar master data dropdown
   const [categories, setCategories] = useState<Category[]>([]);
@@ -36,17 +37,17 @@ export default function EventEdit() {
     const loadAllData = async () => {
       try {
         // Fetch daftar kategori untuk dropdown
-        const resCat = await fetch("https://be-web2.vercel.app/categories");
+        const resCat = await fetch("http://localhost:3000/categories");
         const dataCat = await resCat.json();
         setCategories(dataCat);
 
         // Fetch daftar pembicara untuk dropdown
-        const resSpeaker = await fetch("https://be-web2.vercel.app/pembicara");
+        const resSpeaker = await fetch("http://localhost:3000/pembicara");
         const dataSpeaker = await resSpeaker.json();
         setSpeakers(dataSpeaker);
 
         // Fetch detail data event yang mau diedit
-        const resEvent = await fetch(`https://be-web2.vercel.app/events/${id}`);
+        const resEvent = await fetch(`http://localhost:3000/events/${id}`);
         const dataEvent = await resEvent.json();
 
         // Format tanggal ISO dari backend agar pas dibaca oleh type="date" (YYYY-MM-DD)
@@ -79,12 +80,14 @@ export default function EventEdit() {
   // 2. Fungsi simpan perubahan (PUT)
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setIsUpdating(true);
+
     try {
       // Membersihkan string tanggal dari whitespace tidak terlihat sebelum disatukan
       const cleanDate = formData.dateEvent.trim();
       const fullDateTimeString = `${cleanDate}T07:00:00.000Z`;
 
-      const response = await fetch(`https://be-web2.vercel.app/events/${id}`, {
+      const response = await fetch(`http://localhost:3000/events/${id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -108,35 +111,46 @@ export default function EventEdit() {
     } catch (error) {
       console.error("Gagal update:", error);
       alert("Gagal terhubung ke server. Pastikan server backend sudah dinyalakan!");
+    } finally {
+      setIsUpdating(false);
     }
   };
 
-  if (loading) return <div className="p-10 text-center text-gray-400">Memuat data event...</div>;
+  if (loading) return <div className="p-10 text-center text-gray-400 text-sm">Memuat data event...</div>;
 
   return (
-    <div className="p-10 max-w-2xl mx-auto font-sans">
-      <h1 className="text-3xl font-bold mb-2 text-[#1a0a10]">Edit Event</h1>
-      <p className="text-sm text-gray-400 mb-6">Ubah data event yang diperlukan di bawah ini</p>
+    // Ukuran kontainer disamakan dengan EventCreate (max-w-2xl)
+    <div className="p-6 max-w-2xl mx-auto font-sans">
       
-      <form onSubmit={handleSubmit} className="bg-white border border-gray-100 shadow-sm p-6 rounded-2xl space-y-4">
-        {/* Input Nama Event */}
+      {/* Box Utama Form dengan padding p-8 dan rounded-3xl sesuai EventCreate */}
+      <form onSubmit={handleSubmit} className="bg-white border border-gray-200 shadow-sm p-8 rounded-3xl space-y-4">
+        
+        {/* Teks Judul dan Sub-deskripsi */}
+        <div className="mb-4">
+          <h1 className="text-2xl font-bold text-[#1a0a10]">Edit Event</h1>
+          <p className="text-xs text-gray-400 mt-0.5">Ubah data event yang diperlukan di bawah ini</p>
+        </div>
+
+        {/* Nama Event */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Nama Event</label>
+          <label className="block text-xs font-semibold text-[#1a0a10] mb-1.5">Nama Event</label>
           <input 
             type="text"
-            className="border p-2.5 w-full rounded-xl text-sm"
+            className="border border-gray-300 p-2.5 w-full rounded-xl text-sm placeholder-gray-400 focus:outline-none focus:border-[#7B1D3F]"
+            placeholder="Masukkan nama event..."
             value={formData.name} 
             onChange={(e) => setFormData({...formData, name: e.target.value})}
             required
           />
         </div>
 
-        <div className="grid grid-cols-2 gap-4">
-          {/* Dropdown Dinamis Kategori */}
+        {/* Grid Kolom: Kategori & Pembicara */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          {/* Dropdown Kategori */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Pilih Kategori</label>
+            <label className="block text-xs font-semibold text-[#1a0a10] mb-1.5">Kategori Event</label>
             <select 
-              className="border p-2.5 w-full rounded-xl text-sm bg-white"
+              className="border border-gray-300 p-2.5 w-full rounded-xl text-sm bg-white text-gray-700 focus:outline-none focus:border-[#7B1D3F]"
               value={formData.categoryId}
               onChange={(e) => setFormData({...formData, categoryId: e.target.value})}
               required
@@ -148,42 +162,44 @@ export default function EventEdit() {
             </select>
           </div>
 
-          {/* Dropdown Dinamis Pembicara */}
+          {/* Dropdown Pembicara */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Pilih Pembicara</label>
+            <label className="block text-xs font-semibold text-[#1a0a10] mb-1.5">Pembicara</label>
             <select 
-              className="border p-2.5 w-full rounded-xl text-sm bg-white"
+              className="border border-gray-300 p-2.5 w-full rounded-xl text-sm bg-white text-gray-700 focus:outline-none focus:border-[#7B1D3F]"
               value={formData.pembicaraId}
               onChange={(e) => setFormData({...formData, pembicaraId: e.target.value})}
               required
             >
               <option value="">-- Pilih Pembicara --</option>
               {speakers.map((spk) => (
-                <option key={spk.id} value={spk.id}>{spk.name} ({spk.topik})</option>
+                <option key={spk.id} value={spk.id}>{spk.name}</option>
               ))}
             </select>
           </div>
         </div>
 
-        <div className="grid grid-cols-2 gap-4">
-          {/* Input Lokasi */}
+        {/* Grid Kolom: Lokasi & Tanggal */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          {/* Lokasi */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Lokasi</label>
+            <label className="block text-xs font-semibold text-[#1a0a10] mb-1.5">Lokasi</label>
             <input 
               type="text"
-              className="border p-2.5 w-full rounded-xl text-sm"
+              className="border border-gray-300 p-2.5 w-full rounded-xl text-sm placeholder-gray-400 focus:outline-none focus:border-[#7B1D3F]"
+              placeholder="Gedung / Link Online..."
               value={formData.location} 
               onChange={(e) => setFormData({...formData, location: e.target.value})}
               required
             />
           </div>
 
-          {/* Input Tanggal (Hanya Tanggal/Bulan/Tahun) */}
+          {/* Tanggal Event */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Tanggal Event</label>
+            <label className="block text-xs font-semibold text-[#1a0a10] mb-1.5">Tanggal Event</label>
             <input 
               type="date" 
-              className="border p-2.5 w-full rounded-xl text-sm"
+              className="border border-gray-300 p-2.5 w-full rounded-xl text-sm text-gray-700 focus:outline-none focus:border-[#7B1D3F]"
               value={formData.dateEvent || ""} 
               onChange={(e) => setFormData({...formData, dateEvent: e.target.value})}
               required
@@ -191,29 +207,34 @@ export default function EventEdit() {
           </div>
         </div>
 
-        {/* Input Deskripsi */}
+        {/* Deskripsi */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Deskripsi</label>
+          <label className="block text-xs font-semibold text-[#1a0a10] mb-1.5">Deskripsi Event</label>
           <textarea 
             rows={4}
-            className="border p-2.5 w-full rounded-xl text-sm"
+            className="border border-gray-300 p-2.5 w-full rounded-xl text-sm placeholder-gray-400 focus:outline-none focus:border-[#7B1D3F] resize-none"
+            placeholder="Tulis detail deskripsi event di sini..."
             value={formData.description} 
             onChange={(e) => setFormData({...formData, description: e.target.value})}
             required
           />
         </div>
 
-        {/* Tombol Simpan & Batal */}
-        <div className="flex justify-end gap-2 pt-2">
+        {/* Tombol Aksi Kanan Bawah */}
+        <div className="flex justify-end gap-3 pt-2">
           <button 
-            type="button" 
-            onClick={() => navigate(-1)} 
-            className="px-5 py-2.5 border border-gray-200 text-sm font-semibold rounded-xl text-gray-600 hover:bg-gray-50 transition-colors"
+            type="button"
+            onClick={() => navigate(-1)}
+            className="px-5 py-2 border border-gray-300 text-sm font-semibold rounded-xl text-gray-500 hover:bg-gray-50 transition-all"
           >
             Batal
           </button>
-          <button type="submit" className="bg-[#7B1D3F] hover:bg-[#9e2550] text-white px-6 py-2.5 rounded-xl text-sm font-semibold shadow-md transition-all">
-            Simpan Perubahan
+          <button 
+            type="submit" 
+            disabled={isUpdating}
+            className="bg-[#7B1D3F] hover:bg-[#611631] text-white px-5 py-2 rounded-xl text-sm font-semibold shadow-sm transition-all disabled:bg-gray-400"
+          >
+            {isUpdating ? "Menyimpan..." : "Simpan Perubahan"}
           </button>
         </div>
       </form>

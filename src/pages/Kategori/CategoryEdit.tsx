@@ -30,7 +30,7 @@ export default function CategoryEdit() {
 
   // 1. Ambil data kategori lama untuk ditampilkan di form (MENGGUNAKAN URL BACKEND VERCEL)
   useEffect(() => {
-    fetch(`https://be-web2.vercel.app/categories/${id}`)
+    fetch(`http://localhost:3000/categories/${id}`)
       .then((res) => {
         if (!res.ok) throw new Error("Gagal memuat kategori");
         return res.json();
@@ -50,7 +50,7 @@ export default function CategoryEdit() {
     setIsLoading(true);
     setFeedback(null);
     try {
-      const response = await fetch(`https://be-web2.vercel.app/categories/${id}`, {
+      const response = await fetch(`http://localhost:3000/categories/${id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data),

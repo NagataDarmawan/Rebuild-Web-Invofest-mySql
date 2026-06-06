@@ -19,7 +19,7 @@ export default function PembicaraIndex() {
   // 1. Fungsi Fetch Data Pembicara (MENGGUNAKAN URL BACKEND VERCEL)
   const fetchData = async () => {
     try {
-      const res = await fetch("https://be-web2.vercel.app/pembicara");
+      const res = await fetch("http://localhost:3000/pembicara");
       const data = await res.json();
       setPembicara(data);
     } catch (err) {
@@ -38,7 +38,7 @@ export default function PembicaraIndex() {
     if (!confirm("Apakah Anda yakin ingin menghapus pembicara ini?")) return;
 
     try {
-      const res = await fetch(`https://be-web2.vercel.app/pembicara/${id}`, {
+      const res = await fetch(`http://localhost:3000/pembicara/${id}`, {
         method: "DELETE",
       });
       

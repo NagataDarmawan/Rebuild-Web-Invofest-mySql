@@ -13,7 +13,7 @@ export default function CategoryIndex() {
   // 1. Fungsi Fetch Data Kategori (MENGGUNAKAN URL BACKEND VERCEL)
   const fetchCategories = async () => {
     try {
-      const res = await fetch("https://be-web2.vercel.app/categories");
+      const res = await fetch("http://localhost:3000/categories");
       const data = await res.json();
       setCategories(data);
     } catch (err) {
@@ -32,7 +32,7 @@ export default function CategoryIndex() {
     if (!confirm("Apakah Anda yakin ingin menghapus kategori ini?")) return;
 
     try {
-      const res = await fetch(`https://be-web2.vercel.app/categories/${id}`, {
+      const res = await fetch(`http://localhost:3000/categories/${id}`, {
         method: "DELETE",
       });
       

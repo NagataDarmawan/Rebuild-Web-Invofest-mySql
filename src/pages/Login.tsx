@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -18,6 +19,8 @@ const schema = z.object({
 export default function Login() {
   const login = useAuthStore((state) => state.login);
   const navigate = useNavigate();
+  const [loading, setLoading] = useState<boolean>(false); // State untuk mengontrol tombol loading
+  const [showPassword, setShowPassword] = useState<boolean>(false); // 🌟 TAMBAHAN: State untuk show/hide password
 
   const {
     register,
@@ -27,15 +30,52 @@ export default function Login() {
     resolver: zodResolver(schema),
   });
 
-  const onSubmit = (data: FormData) => {
-    console.log("Data Login:", data);
+  const onSubmit = async (data: FormData) => {
+    setLoading(true);
+    try {
+      const response = await fetch("http://localhost:3000/auth/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        // 🌟 DI SINI PERUBAHANNYA:
+        // Mengirimkan nilai 'data.username' ke backend dengan nama properti 'email'
+        body: JSON.stringify({
+          email: data.username, 
+          password: data.password
+        }),
+      });
 
-    if (data.username === "24090032" && data.password === "nagata567") {
+      const result = await response.json();
+
+      if (!response.ok) {
+        // Menangkap pesan error spesifik yang dilempar oleh backend kamu
+        throw new Error(result.message || "Username atau password salah.");
+      }
+
       alert("Login berhasil!");
-      login(data.username);
+      
+      // Simpan JWT token ke localStorage jika dikembalikan oleh backend
+      if (result.token) {
+        localStorage.setItem("token", result.token);
+      }
+
+      // 🌟 PERBAIKAN DI SINI: Ambil objek user dari db (termasuk foto profilnya)
+      const userFromDB = result.user || result.data || result;
+      login({
+        username: userFromDB.username || data.username,
+        foto: userFromDB.foto || "default.png" // default.png jika foto kosong di DB
+      });
+
       navigate("/dashboard");
-    } else {
-      alert("Login gagal! Pastikan username dan password benar.");
+    } catch (err: unknown) {
+      if (err instanceof Error) {
+        alert(err.message);
+      } else {
+        alert("Login gagal! Pastikan jaringan Anda terhubung.");
+      }
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -71,11 +111,23 @@ export default function Login() {
               <Input
                 label="Password"
                 name="password"
-                type="password"
+                type={showPassword ? "text" : "password"} // 🌟 TAMBAHAN: Tipe berubah dinamis tergantung state
                 register={register}
                 error={errors.password?.message}
               />
-              <div className="flex justify-end">
+              
+              {/* 🌟 TAMBAHAN: Fitur Toggle Lihat Password & Lupa Password */}
+              <div className="flex justify-between items-center px-1">
+                <label className="flex items-center gap-2 text-xs text-gray-500 font-medium cursor-pointer select-none">
+                  <input 
+                    type="checkbox" 
+                    checked={showPassword} 
+                    onChange={() => setShowPassword(!showPassword)}
+                    className="rounded border-gray-300 text-[#7B1D3F] focus:ring-[#7B1D3F] h-3.5 w-3.5"
+                  />
+                  Tampilkan Password
+                </label>
+                
                 <span className="text-xs text-[#7B1D3F] font-semibold cursor-pointer hover:text-[#5a1530] hover:underline transition-colors duration-200">
                   Lupa password?
                 </span>
@@ -85,9 +137,10 @@ export default function Login() {
 
           <button
             type="submit"
-            className="w-full bg-[#7B1D3F] hover:bg-[#5a1530] active:scale-[0.98] text-white font-bold text-[15px] py-3.5 rounded-xl transition-all duration-200 tracking-wide shadow-md shadow-pink-900/10 hover:shadow-lg hover:shadow-pink-900/20 mt-2"
+            disabled={loading}
+            className="w-full bg-[#7B1D3F] hover:bg-[#5a1530] active:scale-[0.98] disabled:bg-gray-400 text-white font-bold text-[15px] py-3.5 rounded-xl transition-all duration-200 tracking-wide shadow-md shadow-pink-900/10 hover:shadow-lg hover:shadow-pink-900/20 mt-2"
           >
-            Masuk
+            {loading ? "Memproses..." : "Masuk"}
           </button>
         </form>
 

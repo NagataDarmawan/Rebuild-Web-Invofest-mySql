@@ -32,7 +32,7 @@ export default function CategoryCreate() {
 
     try {
       // MENGUBAH URL KE BACKEND VERCEL YANG ONLINE
-      const response = await fetch("https://be-web2.vercel.app/categories", {
+      const response = await fetch("http://localhost:3000/categories", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data),
